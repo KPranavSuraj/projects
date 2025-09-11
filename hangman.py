@@ -1,43 +1,153 @@
 import random
 
-word_list = ['python', 'hangman', 'challenge', 'programming', 'openai', 'developer', 'algorithm']
+HANGMAN_PICS = [
+    """
+     +---+
+     |   |
+         |
+         |
+         |
+         |
+    =========""",
+    """
+     +---+
+     |   |
+     O   |
+         |
+         |
+         |
+    =========""",
+    """
+     +---+
+     |   |
+     O   |
+     |   |
+         |
+         |
+    =========""",
+    """
+     +---+
+     |   |
+     O   |
+    /|   |
+         |
+         |
+    =========""",
+    """
+     +---+
+     |   |
+     O   |
+    /|\\  |
+         |
+         |
+    =========""",
+    """
+     +---+
+     |   |
+     O   |
+    /|\\  |
+    /    |
+         |
+    =========""",
+    """
+     +---+
+     |   |
+     O   |
+    /|\\  |
+    / \\  |
+         |
+    ========="""
+]
 
-chosen_word = random.choice(word_list)
-word_length = len(chosen_word)
+WORD_CATEGORIES = {
+    "Animals": [
+        {"word": "giraffe", "hint": "The tallest land animal."},
+        {"word": "elephant", "hint": "The largest land animal."},
+        {"word": "kangaroo", "hint": "It carries its baby in a pouch."},
+    ],
+    "Technology": [
+        {"word": "python", "hint": "A popular programming language."},
+        {"word": "robot", "hint": "A machine that can act like a human."},
+        {"word": "internet", "hint": "Connects the world digitally."},
+    ],
+    "Space": [
+        {"word": "astronaut", "hint": "Someone who travels to space."},
+        {"word": "planet", "hint": "Orbits a star and may support life."},
+        {"word": "galaxy", "hint": "A massive group of stars and planets."},
+    ],
+    "Objects": [
+        {"word": "piano", "hint": "A large musical instrument with keys."},
+        {"word": "umbrella", "hint": "Used to stay dry in the rain."},
+        {"word": "backpack", "hint": "Used to carry books or supplies."}
+    ]
+}
 
-display = ['_' for _ in chosen_word]
+def choose_word():
+    category = random.choice(list(WORD_CATEGORIES.keys()))
+    word_data = random.choice(WORD_CATEGORIES[category])
+    return word_data["word"], word_data["hint"], category
 
-lives = 6
-guessed_letters = []
+def display_progress(word, guessed_letters):
+    return " ".join([letter if letter in guessed_letters else "_" for letter in word])
 
-print("🎮 Welcome to Hangman!")
-print(' '.join(display))
+def play_round():
+    word, hint, category = choose_word()
+    guessed_letters = set()
+    wrong_letters = set()
+    attempts = len(HANGMAN_PICS) - 1
 
-while '_' in display and lives > 0:
-    guess = input("\nGuess a letter: ").lower()
+    print("\n🎮 New Game Started!")
+    print("📚 Category:", category)
+    print("💡 Hint:", hint)
 
-    if not guess.isalpha() or len(guess) != 1:
-        print("❌ Please enter a single alphabetic character.")
-        continue
+    while attempts > 0:
+        print(HANGMAN_PICS[len(HANGMAN_PICS) - 1 - attempts])
+        print("\nWord:", display_progress(word, guessed_letters))
+        print("Guessed letters:", " ".join(sorted(guessed_letters | wrong_letters)))
+        print("❌ Wrong guesses left:", attempts)
 
-    if guess in guessed_letters:
-        print(f"🔁 You've already guessed '{guess}'. Try a different letter.")
-        continue
+        guess = input("🔠 Guess a letter: ").lower()
 
-    guessed_letters.append(guess)
+        if not guess.isalpha() or len(guess) != 1:
+            print("⚠️ Please enter a single letter.\n")
+            continue
 
-    if guess in chosen_word:
-        print("✅ Good guess!")
-        for index, letter in enumerate(chosen_word):
-            if letter == guess:
-                display[index] = guess
-    else:
-        lives -= 1
-        print(f"❌ Wrong guess. You lose a life. Lives left: {lives}")
+        if guess in guessed_letters or guess in wrong_letters:
+            print("⚠️ You already guessed that letter.\n")
+            continue
 
-    print(' '.join(display))
+        if guess in word:
+            guessed_letters.add(guess)
+            print("✅ Good guess!\n")
+            if all(letter in guessed_letters for letter in word):
+                print("\n🎉 Congratulations! You guessed the word:", word.upper())
+                return True
+        else:
+            wrong_letters.add(guess)
+            attempts -= 1
+            print("❌ Wrong guess.\n")
 
-if '_' not in display:
-    print("\n🎉 Congratulations! You guessed the word:", chosen_word)
-else:
-    print("\n💀 Game Over. The word was:", chosen_word)
+    print(HANGMAN_PICS[-1])
+    print("\n💀 Game over! The word was:", word.upper())
+    return False
+
+def main():
+    score = 0
+    rounds_played = 0
+    print("===== Welcome to Enhanced Hangman! =====")
+
+    while True:
+        result = play_round()
+        rounds_played += 1
+        if result:
+            score += 1
+
+        print(f"\n🏆 Score: {score}/{rounds_played}")
+        play_again = input("\n🔁 Do you want to play again? (y/n): ").lower()
+        if play_again != 'y':
+            break
+
+    print("\n👋 Thanks for playing! Final Score:", score, "/", rounds_played)
+
+if __name__ == "__main__":
+    main()
